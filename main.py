@@ -82,7 +82,6 @@ def tunesyllable(syl):
     if num.isdigit():
       syl = syl[:-1]
       num = int(num)
-      print("syl:" + syl)
     else:
       num = 0
   else:
@@ -96,7 +95,6 @@ def tunesyllable(syl):
   if sumup == 1: # 数组中只有一个元素的值是 1
     # If the syllable has one vowel, that vowel should be tone-marked
     _v = vowels[counts.index(1)]
-    print(_v)
     _syl = syl.split(_v)
     _syl = tunechar(_v, num).join(_syl)
 
@@ -105,6 +103,8 @@ def tunesyllable(syl):
     _syl = ""
   else:
      _syl = ""
+
+     # !===== TODO =====
   """
 If a diphthong contains ⟨i⟩ or ⟨u⟩, the tone mark goes above the other vowel; viz. ⟨ia̍h⟩, ⟨kiò⟩, ⟨táu⟩
 If a diphthong includes both ⟨i⟩ and ⟨u⟩, mark the ⟨u⟩; viz. ⟨iû⟩, ⟨ùi⟩
@@ -128,4 +128,6 @@ def tunepara(text):
 print(tunechar("a", 5))
 print(tunesyllable("chang5"))
 print(tunesyllable("a4"))
-print(tunepara("chang5-chang4 chang2-chak8"))
+
+print(tunepara("mo͘-e si7 chit8-e5 Jit8-gi2 siok8-oe7 chu2-iau3 e5 i3-su3 si7 kong2 tui3 anime, bang3-gah, tian7-tong7 kak-sek e5 kah-i3 kam2-kak."))
+# Current output: mo͘-e sī chi̍t-ê Ji̍t-gí - chú- ê ì-sù sī kóng   bàng-gah, -tōng kak-sek ê kah-ì kám-kak.
