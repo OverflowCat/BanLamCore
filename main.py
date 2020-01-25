@@ -77,16 +77,17 @@ def tunechar(char, num):
 
 def tunesyllable(syl):
   leng = len(syl)
+  _syl = syl
   if leng > 1:
     num = syl[-1]
     if num.isdigit():
       syl = syl[:-1]
       num = int(num)
     else:
-      num = 0
+      return syl
   else:
-    num = 0
- 
+    return syl
+  
   vowels = ['A', 'a', 'E', 'e', 'I', 'i', 'O', 'o', 'U', 'u']
   counts = []
   for v in vowels:
@@ -100,25 +101,44 @@ def tunesyllable(syl):
 
   elif sumup == 0:
     # If the syllable has no vowel, mark the nasal consonant
-    _syl = ""
+    
+    _syl = syl
   else:
-     _syl = ""
-
+     def contains(vowel):
+       return counts[vowel.index(vowel)] > 0
+     if (contains("i") or contains("I")) and (contains("u") or contains("U")) :
+       if sumup == 2:
+         # only contains "i", "u"
+         # !===== TODO =====
+         # U 只能在首位
+         _syl = syl.split("u")
+         _syl = tunechar("u", num).join(_syl)
+         # If a diphthong includes both ⟨i⟩ and ⟨u⟩, mark the ⟨u⟩; viz. ⟨iû⟩, ⟨ùi⟩
+       else:
+         # !===== TODO =====
+         # If the final is made up of three or more letters, mark the second vowel (except when rules 2 and 3 apply); viz. ⟨goán⟩, ⟨oāi⟩, ⟨khiáu⟩
+         pass
+     elif (sumup == 2 and (contains("o") or contains("O"))):
+        if (contains("a") or contains("A")) or (contains("E") or contains("e")):
+          pass
+       
      # !===== TODO =====
   """
 If a diphthong contains ⟨i⟩ or ⟨u⟩, the tone mark goes above the other vowel; viz. ⟨ia̍h⟩, ⟨kiò⟩, ⟨táu⟩
-If a diphthong includes both ⟨i⟩ and ⟨u⟩, mark the ⟨u⟩; viz. ⟨iû⟩, ⟨ùi⟩
-If the final is made up of three or more letters, mark the second vowel (except when rules 2 and 3 apply); viz. ⟨goán⟩, ⟨oāi⟩, ⟨khiáu⟩
 If ⟨o⟩ occurs with ⟨a⟩ or ⟨e⟩, mark the ⟨o⟩ (except when rule 4 applies); viz. ⟨òa⟩, ⟨thóe⟩
 
   """
   return _syl
 
 def tunepara(text):
+  # ===== TODO =====
+  # 需要处理更复杂的文本
   words = text.split(" ")
   _words = []
   for word in words:
     syls = word.split("-")
+    # ===== TODO ======
+    # 动词后有趋向动词时两者连写，如：cháu--chhut-khì（走出去，即跑出去）。（备注：此时趋向动词与动词之间为双连字号，且趋向动词须读为轻声。）
     syls = [tunesyllable(syl) for syl in syls]
     word = "-".join(syls)
     _words.append(word)
@@ -130,4 +150,4 @@ print(tunesyllable("chang5"))
 print(tunesyllable("a4"))
 
 print(tunepara("mo͘-e si7 chit8-e5 Jit8-gi2 siok8-oe7 chu2-iau3 e5 i3-su3 si7 kong2 tui3 anime, bang3-gah, tian7-tong7 kak-sek e5 kah-i3 kam2-kak."))
-# Current output: mo͘-e sī chi̍t-ê Ji̍t-gí - chú- ê ì-sù sī kóng   bàng-gah, -tōng kak-sek ê kah-ì kám-kak.
+# Current output: mo͘-e sī chi̍t-ê Ji̍t-gí siok8-oe7 chú-iau3 ê ì-sù sī kóng tui3 anime, bàng-gah, tian7-tōng kak-sek ê kah-ì kám-kak.
