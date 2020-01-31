@@ -1,6 +1,7 @@
 import numpy as np
 
-tunecharsstr = """A Á À Â Ā A̍ Ă
+tunecharsstr = """
+A Á À Â Ā A̍ Ă
 a á à â ā a̍ ă
 A͘ Á͘ À͘ Â͘ Ā͘ A̍͘ Ă͘
 a͘ á͘ à͘ â͘ ā͘ a̍͘ ă͘
@@ -27,7 +28,8 @@ u ú ù û ū u̍ ŭ
 U͘ Ú͘ Ù͘ Û͘ Ū͘ U̍͘ Ŭ͘
 u͘ ú͘ ù͘ û͘ ū͘ u̍͘ ŭ͘
 Ṳ Ṳ́ Ṳ̀ Ṳ̂ Ṳ̄ Ṳ̍
-ṳ ṳ́ ṳ̀ ṳ̂ ṳ̄ ṳ̍"""
+ṳ ṳ́ ṳ̀ ṳ̂ ṳ̄ ṳ̍
+""".strip()
 _tunechars = tunecharsstr.split("\n")
 tunechars = []
 for i in _tunechars:
@@ -39,6 +41,13 @@ for line in tunechars:
   tuneindex.append(line[0])
 print(str(tuneindex))
 
+
+def is_alphabet(uchar):
+  """判断一个unicode是否是英文字母"""
+  if (uchar >= u'\u0041' and uchar<=u'\u005a') or (uchar >= u'\u0061' and uchar<=u'\u007a'):
+    return True
+  else:
+    return False
 """
 调号	1	2	3	4	5	6	7	8
 传统调名	阴平	阴上	阴去	阴入	阳平	阳上	阳去	阳入
@@ -88,47 +97,96 @@ def tunesyllable(syl):
   else:
     return syl
   
-  vowels = ['A', 'a', 'E', 'e', 'I', 'i', 'O', 'o', 'U', 'u']
+  # 转换成全部小写，再转换回去
+  is_cap=[]
+  if syl.islower():
+    c_low = True
+  elif syl.istitle():
+    c_title = True
+  elif syl.isupper():
+    c_upper = True
+  else:
+    for x in syl:
+      is_cap.append(x.isupper())
+  
+  _syl = syl
+  vowels = [ 'a',  'e',  'i',  'o',  'u']
   counts = []
+  booleans = []
   for v in vowels:
     counts.append(syl.count(v))
   sumup = np.sum(counts) # 计算元音总数
+  def contains(vowel):
+    return counts[vowel.index(vowel)] > 0
+  for x in syl:
+    is_v = False
+    if (is_alphabet(x)):
+      for v in vowels:
+        if v == x:
+          is_v = True
+          break
+    booleans.append(is_v)
+
+  def tunespecific(text, index, _tune):
+    if isinstance(index, int):
+      ini = text[0:index]
+      mid = text[index]
+      end = text[index + 1:]
+      return ini + tunechar(mid, _tune) + end
+    else:
+      return text.replace(index, tunechar(index, _tune))
   if sumup == 1: # 数组中只有一个元素的值是 1
     # If the syllable has one vowel, that vowel should be tone-marked
     _v = vowels[counts.index(1)]
     _syl = syl.split(_v)
     _syl = tunechar(_v, num).join(_syl)
-
   elif sumup == 0:
-    # If the syllable has no vowel, mark the nasal consonant
-    
-    _syl = syl
-  else:
-     def contains(vowel):
-       return counts[vowel.index(vowel)] > 0
-     if (contains("i") or contains("I")) and (contains("u") or contains("U")) :
-       if sumup == 2:
-         # only contains "i", "u"
-         # !===== TODO =====
-         # U 只能在首位
-         _syl = syl.split("u")
-         _syl = tunechar("u", num).join(_syl)
-         # If a diphthong includes both ⟨i⟩ and ⟨u⟩, mark the ⟨u⟩; viz. ⟨iû⟩, ⟨ùi⟩
-       else:
-         # !===== TODO =====
-         # If the final is made up of three or more letters, mark the second vowel (except when rules 2 and 3 apply); viz. ⟨goán⟩, ⟨oāi⟩, ⟨khiáu⟩
-         pass
-     elif (sumup == 2 and (contains("o") or contains("O"))):
-        if (contains("a") or contains("A")) or (contains("E") or contains("e")):
-          pass
-       
-     # !===== TODO =====
-  """
-If a diphthong contains ⟨i⟩ or ⟨u⟩, the tone mark goes above the other vowel; viz. ⟨ia̍h⟩, ⟨kiò⟩, ⟨táu⟩
-If ⟨o⟩ occurs with ⟨a⟩ or ⟨e⟩, mark the ⟨o⟩ (except when rule 4 applies); viz. ⟨òa⟩, ⟨thóe⟩
+    # If the syllable has no vowel, mark the nasal consonant(m or n)
+    if contains("n"):
+      return tunespecific(syl, "n", num)
+    elif contains("m"):
+      return tunespecific(syl, "m", num)
 
-  """
+  elif sumup == 2:
+    if contains("u") and contains("i"):
+      return tunespecific(syl, "u", num)
+    elif contains("u") or contains("i"):
+      _index = 0
+      for b in booleans:
+        if b:
+          char = syl[_index]
+          if char != "u" and char != "i":
+            return tunespecific(syl, char, num)
+        _index += 1
+    elif contains("o"):
+      return tunespecific(syl, "o", num)
+  
+  c = 0
+  _c = 0
+  for b in booleans:
+    if b:
+      c += 1
+    if c == 2:
+      return tunespecific(syl, _c, num)
+    _c += 1
   return _syl
+    # !===== TODO =====
+    
+"""
+if 没有元音
+  m or n 加调
+elif 只有一个元音
+  return 该元音加调
+elif 有两个元音
+  if 含有 u, i
+    return u 加调
+  elif 含有 u or i
+    return 另一个元音加调
+  elif 含有 o
+    return o 加调
+return 第二个元音加调
+"""
+
 
 def tunepara(text):
   # ===== TODO =====
@@ -143,11 +201,11 @@ def tunepara(text):
     word = "-".join(syls)
     _words.append(word)
   return " ".join(_words)
-  
+
 
 print(tunechar("a", 5))
 print(tunesyllable("chang5"))
 print(tunesyllable("a4"))
 
-print(tunepara("mo͘-e si7 chit8-e5 Jit8-gi2 siok8-oe7 chu2-iau3 e5 i3-su3 si7 kong2 tui3 anime, bang3-gah, tian7-tong7 kak-sek e5 kah-i3 kam2-kak."))
-# Current output: mo͘-e sī chi̍t-ê Ji̍t-gí siok8-oe7 chú-iau3 ê ì-sù sī kóng tui3 anime, bàng-gah, tian7-tōng kak-sek ê kah-ì kám-kak.
+print(tunepara("mo͘-e si7 chit8-e5 Jit8-gi2 siok8-oe7 chu2-iau3 e5 i3-su3 si7 kong2 tui3 anime, bang3-gah, tian7-tong7 kak-sek e5 kah-i3 kam2-kak. test au5 ai5 ae5 ea5 oe5 meua5-iau5-eo5 ea5-aeaq5"))
+# Current output: mo͘-e sī chi̍t-ê Ji̍t-gí siok8-oe7 chú-iau3 ê ì-sù sī kóng tui3 anime, bàng-gah, tian7-tōng kak-sek ê kah-ì kám-kak.
